@@ -1,5 +1,5 @@
 // POST /functions/v1/submit-score
-// Body (JSON or form): { token, text, day? (YYYY-MM-DD, the phone's local date) }
+// Body (JSON or form): { token, text, clip? (clipboard fallback), day? (YYYY-MM-DD, the phone's local date) }
 // Called by the iOS Shortcut. Auth is the personal share token, not a Supabase JWT,
 // so this function is deployed with verify_jwt = false (see supabase/config.toml).
 import { createClient } from 'jsr:@supabase/supabase-js@2';
@@ -38,7 +38,12 @@ Deno.serve(async (req) => {
   if (!tok) return reply(401, { ok: false, message: 'That token is not valid any more. Copy a fresh one from Bragboard → Me.' });
   const userId = tok.user_id as string;
 
-  const parsed = parseShare(text);
+  // Some games' Share buttons hand the Shortcut only a link, not the result text. The Shortcut
+  // also sends the clipboard as `clip`; use it only when the shared text itself can't be read.
+  const clip = String(body.clip ?? '').slice(0, 2000);
+  let parsed = parseShare(text);
+  let raw = text;
+  if (!parsed && clip) { parsed = parseShare(clip); raw = clip; }
   if (!parsed) return reply(422, { ok: false, message: 'Bragboard didn’t recognise that result. Open the app and enter it by hand.' });
   const game = getGame(parsed.gameId)!;
 
@@ -53,7 +58,7 @@ Deno.serve(async (req) => {
   const { error } = await db.from('scores').insert({
     user_id: userId, game_id: parsed.gameId, day, score: parsed.score, points: parsed.points,
     display: parsed.display, failed: Boolean(parsed.failed), puzzle: parsed.puzzle ?? null,
-    meta: parsed.meta ?? {}, raw: text, source: 'shortcut',
+    meta: parsed.meta ?? {}, raw, source: 'shortcut',
   });
   if (error) return reply(500, { ok: false, message: `Could not save: ${error.message}` });
 

@@ -93,14 +93,17 @@ export default function Me() {
               <ol className="steps">
                 <li>Open <strong>Shortcuts</strong> → <strong>+</strong>. Name it <em>Post to Bragboard</em>.</li>
                 <li>Tap <strong>ⓘ</strong> → turn on <strong>Show in Share Sheet</strong>. Set it to receive <em>Text</em> and <em>URLs</em>. Under “If there’s no input”, choose <strong>Get Clipboard</strong>.</li>
+                <li>Add <strong>Combine Text</strong>: <em>Shortcut Input</em>, separator <strong>New Lines</strong>. (Games share text and a link as separate items; this keeps both.)</li>
+                <li>Add <strong>Get Clipboard</strong>. (Backup for games whose Share button only passes a link.)</li>
                 <li>Add <strong>Format Date</strong>: Current Date, Custom format <code>yyyy-MM-dd</code>.</li>
                 <li>
                   Add <strong>Get Contents of URL</strong>:
                   <div className="kv"><span>URL</span><code className="mono wrap">{endpoint}</code><CopyButton text={endpoint} /></div>
-                  Method <strong>POST</strong>, Request Body <strong>JSON</strong>, with three Text fields:
+                  Method <strong>POST</strong>, Request Body <strong>JSON</strong>, with four Text fields:
                   <ul>
                     <li><code>token</code> → your token (paste it)</li>
-                    <li><code>text</code> → <em>Shortcut Input</em></li>
+                    <li><code>text</code> → <em>Combined Text</em></li>
+                    <li><code>clip</code> → <em>Clipboard</em></li>
                     <li><code>day</code> → <em>Formatted Date</em></li>
                   </ul>
                 </li>
