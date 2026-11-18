@@ -25,7 +25,7 @@ export const AWARDS: Record<string, AwardInfo> = {
   timelord:     { emoji: '⏳', title: 'Time Lord', desc: 'TimeGuessr 45,000+', tone: 'gold' },
   bullseye:     { emoji: '🌐', title: 'Bullseye Planet', desc: 'Globle in two or fewer', tone: 'fun' },
   proof:        { emoji: '🍞', title: 'Proof Positive', desc: 'Near-perfect Yeastimate', tone: 'fun' },
-  topgun:       { emoji: '🛩️', title: 'Top Gun', desc: 'Near-perfect Plane', tone: 'fun' },
+  topgun:       { emoji: '🛩️', title: 'Top Gun', desc: 'Plain Game 9,000m+', tone: 'fun' },
   streak3:      { emoji: '🔥', title: '3-Day Streak', desc: 'Posted three days running', tone: 'fire' },
   streak7:      { emoji: '🔥', title: 'Week Warrior', desc: 'Seven-day posting streak', tone: 'fire' },
   streak30:     { emoji: '☄️', title: 'Monthly Menace', desc: '30-day posting streak', tone: 'fire' },

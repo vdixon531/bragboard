@@ -7,11 +7,11 @@ import { Celebration } from '../components/Celebration';
 
 const SAMPLES: Record<string, string> = {
   maptap: 'www.maptap.gg November 18\n93🏆 87🎉 71😁 99🏆 64🙂\nFinal score: 912',
-  krillion: 'Krillion #125\n430 pts',
+  krillion: 'Krillion #126 🦐\n360\n\n🫧🏮🐟🏮🦑🦑🐟',
   wordle: 'Wordle 1,612 2/6\n⬛🟨⬛⬛⬛\n🟩🟩🟩🟩🟩',
   connections: 'Connections\nPuzzle #532\n🟪🟪🟪🟪\n🟦🟦🟦🟦\n🟩🟩🟩🟩\n🟨🟨🟨🟨',
-  plane: 'Plane #44 Score: 92',
-  yeastimate: 'Yeastimate #12 Score: 95',
+  plane: 'Plain Game #026 — ✈️ 1,742 m\n🎯⬜⬜🟧⬜⬜⬜  ⭐ Golden: round 7',
+  yeastimate: 'Yeastimate #25 · 1,393\n🟨🔥⬜🟨🟨⬜🔥\nStill Proving',
   mini: 'I solved the New York Times Mini Crossword in 0:27!',
 };
 

@@ -57,24 +57,16 @@ const guessPoints = (g: number, failed?: boolean) => (failed || g > 6 ? 0 : GUES
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
-/** Best-effort number extraction for games whose share format we haven't seen yet. */
-function genericScore(t: string): Parsed | null {
-  const ratio = t.match(/(\d[\d,]*(?:\.\d+)?)\s*\/\s*(\d[\d,]*)/);
-  if (ratio) {
-    const a = num(ratio[1]), b = num(ratio[2]);
-    if (b > 0 && a <= b) return { score: a, display: `${ratio[1]}/${ratio[2]}`, meta: { max: b } };
-  }
-  const labelled = t.match(/(?:score|total|points?|pts)\s*[:=-]?\s*(\d[\d,]*(?:\.\d+)?)/i)
-    ?? t.match(/(\d[\d,]*(?:\.\d+)?)\s*(?:points?|pts)\b/i);
-  if (labelled) return { score: num(labelled[1]), display: labelled[1] };
-  const pct = t.match(/(\d{1,3}(?:\.\d+)?)\s*%/);
-  if (pct) return { score: num(pct[1]), display: `${pct[1]}%`, meta: { max: 100 } };
-  return null;
+/** First emoji-strip line (3+ emoji, starts with one) that isn't the header line. */
+function emojiRow(t: string, header: RegExp): string | undefined {
+  return t.split(/\r?\n/).map((l) => l.trim()).find((l) =>
+    !header.test(l) && /^\p{Extended_Pictographic}/u.test(l) && (l.match(/\p{Extended_Pictographic}/gu)?.length ?? 0) >= 3);
 }
-const genericPoints = (p: Parsed) => {
-  const max = typeof p.meta?.max === 'number' ? (p.meta.max as number) : 100;
-  return clamp((p.score / max) * 100);
-};
+
+// Max scores used to turn raw scores into 0-100 league points. Neither game publishes a max,
+// so these are estimates: raise or lower them if real scores land too high or too low.
+const KRILLION_MAX = 700;     // 7 prompts, about 100 pts each
+const YEASTIMATE_MAX = 3500;  // 7 questions, about 500 each
 
 const guessGame = (
   id: string, name: string, emoji: string, url: string, blurb: string, theme: GameTheme,
@@ -119,48 +111,87 @@ export const GAMES: GameDef[] = [
     fromManual: (v) => ({ score: v, display: String(v) }),
   },
   {
+    // Krillion #126 🦐
+    // 360
+    //
+    // 🫧🏮🐟🏮🦑🦑🐟        <- one creature per prompt, deeper = rarer answer
     id: 'krillion', name: 'Krillion', emoji: '🦐', url: 'https://krillion.io',
     blurb: 'Seven prompts. Rarer answers dive deeper.',
-    lowerIsBetter: false, verified: false,
+    lowerIsBetter: false, verified: true,
     theme: { bg: '#0A2340', fg: '#E6F6FF', accent: '#FF7A9C', motif: 'bubbles' },
-    manual: { label: 'Points (0–700)', min: 0, max: 700 },
+    manual: { label: `Points (0–${KRILLION_MAX})`, min: 0, max: KRILLION_MAX },
     detect: (t) => /krillion/i.test(t),
     parse: (t) => {
-      // Format not confirmed yet. Accept "430 pts" / "Score: 430" / "4,300m" (1 pt = 10 m).
-      const pts = t.match(/(\d[\d,]*)\s*(?:pts|points)\b/i) ?? t.match(/(?:score|total)\s*:?\s*(\d[\d,]*)/i);
+      const puzzle = t.match(/krillion\s*#\s*(\d+)/i)?.[1];
+      // Real format: the score sits alone on the line under the header.
+      const alone = t.match(/^\s*(\d[\d,]*)\s*$/m);
+      // Older guesses kept as fallbacks: "430 pts" / "Score: 430" / "4,300m" (1 pt = 10 m).
+      const pts = alone ?? t.match(/(\d[\d,]*)\s*(?:pts|points)\b/i) ?? t.match(/(?:score|total)\s*:?\s*(\d[\d,]*)/i);
       let points: number | null = pts ? num(pts[1]) : null;
       if (points == null) {
         const depth = t.match(/(\d[\d,]*)\s*(?:m|meters|metres)\b/i);
         if (depth) points = Math.round(num(depth[1]) / 10);
       }
       if (points == null) return null;
-      const puzzle = t.match(/#\s*(\d+)/)?.[1];
-      return { score: points, display: `${points} pts`, puzzle, meta: { depth: points * 10 } };
+      const dive = emojiRow(t, /krillion/i);
+      return { score: points, display: `${points} pts`, puzzle, meta: { depth: points * 10, ...(dive && { dive }) } };
     },
-    points: (p) => clamp(p.score / 7),
+    points: (p) => clamp((p.score / KRILLION_MAX) * 100),
     fromManual: (v) => ({ score: v, display: `${v} pts`, meta: { depth: v * 10 } }),
   },
   {
-    id: 'yeastimate', name: 'Yeastimate', emoji: '🍞', url: 'https://www.google.com/search?q=yeastimate+game',
-    blurb: 'Estimate it. Watch the dough rise.',
-    lowerIsBetter: false, verified: false,
+    // Yeastimate #25 · 1,393
+    // 🟨🔥⬜🟨🟨⬜🔥        <- one slice per question: golden / burnt / raw
+    // Still Proving        <- rank title
+    // https://yeastimate.com
+    id: 'yeastimate', name: 'Yeastimate', emoji: '🍞', url: 'https://yeastimate.com',
+    blurb: 'Seven estimates. Golden toast for close calls.',
+    lowerIsBetter: false, verified: true,
     theme: { bg: '#E9B872', fg: '#3B2412', accent: '#8C3B12', motif: 'crumbs' },
-    manual: { label: 'Score (0–100)', min: 0, max: 100 },
+    manual: { label: `Score (0–${YEASTIMATE_MAX.toLocaleString('en-US')})`, min: 0, max: YEASTIMATE_MAX },
     detect: (t) => /yeastimate/i.test(t),
-    parse: (t) => genericScore(t.replace(/yeastimate\s*#?\s*\d*/i, '')),
-    points: genericPoints,
-    fromManual: (v) => ({ score: v, display: String(v) }),
+    parse: (t) => {
+      const m = t.match(/yeastimate\s*#\s*(\d+)\s*[·•|:—–-]\s*(\d[\d,]*)/i);
+      if (!m) return null;
+      const score = num(m[2]);
+      const lines = t.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      const slices = emojiRow(t, /yeastimate/i);
+      const rowIdx = slices ? lines.indexOf(slices) : -1;
+      const rank = rowIdx >= 0 && lines[rowIdx + 1] && !/^https?:/i.test(lines[rowIdx + 1]) ? lines[rowIdx + 1] : undefined;
+      return {
+        score, display: score.toLocaleString('en-US'), puzzle: m[1],
+        meta: { ...(slices && { slices }), ...(rank && { rank }) },
+      };
+    },
+    points: (p) => clamp((p.score / YEASTIMATE_MAX) * 100),
+    fromManual: (v) => ({ score: v, display: v.toLocaleString('en-US') }),
   },
   {
-    id: 'plane', name: 'Plane', emoji: '✈️', url: 'https://www.google.com/search?q=plane+daily+game',
-    blurb: 'Name the aircraft. Clear for takeoff.',
-    lowerIsBetter: false, verified: false,
+    // Plain Game #026 — ✈️ 1,742 m
+    // 🎯⬜⬜🟧⬜⬜⬜  ⭐ Golden: round 7
+    // Try one: ...
+    // https://plaingame.app/c/...
+    // Scoring (plaingame.app/scoring): 10 m per accuracy point, minus time drift; max 10,000 m.
+    // id stays 'plane' so existing leagues and scores keep working.
+    id: 'plane', name: 'Plain Game', emoji: '✈️', url: 'https://plaingame.app',
+    blurb: 'Seven estimates. Closer answers climb higher.',
+    lowerIsBetter: false, verified: true,
     theme: { bg: '#2F7FE8', fg: '#F5FAFF', accent: '#FFFFFF', motif: 'flight' },
-    manual: { label: 'Score (0–100)', min: 0, max: 100 },
-    detect: (t) => /\bplane\b|✈/i.test(t),
-    parse: (t) => genericScore(t.replace(/plane\w*\s*#?\s*\d*/i, '')),
-    points: genericPoints,
-    fromManual: (v) => ({ score: v, display: String(v) }),
+    manual: { label: 'Altitude in metres (0–10,000)', min: 0, max: 10000 },
+    detect: (t) => /plain\s*game|plaingame\.app/i.test(t),
+    parse: (t) => {
+      const m = t.match(/plain\s*game\s*#\s*(\d+)[^\n]*?(\d[\d,]*)\s*m\b/i);
+      if (!m) return null;
+      const score = num(m[2]);
+      const rounds = emojiRow(t, /plain\s*game/i)?.replace(/⭐.*$/u, '').trim();
+      const golden = t.match(/golden\s*:?\s*round\s*(\d+)/i)?.[1];
+      return {
+        score, display: `${score.toLocaleString('en-US')} m`, puzzle: m[1],
+        meta: { ...(rounds && { rounds }), ...(golden && { golden: parseInt(golden, 10) }) },
+      };
+    },
+    points: (p) => clamp(p.score / 100),
+    fromManual: (v) => ({ score: v, display: `${v.toLocaleString('en-US')} m` }),
   },
   guessGame('wordle', 'Wordle', '🟩', 'https://www.nytimes.com/games/wordle',
     'Six tries, five letters.',
@@ -285,8 +316,8 @@ export const GAMES: GameDef[] = [
   },
 ];
 
-// Specific formats are checked before the loose best-guess ones (Plane/Yeastimate/Krillion match on a word).
-const LOOSE = new Set(['plane', 'yeastimate', 'krillion']);
+// Specific formats are checked before the loose best-guess ones (Krillion matches on the word alone).
+const LOOSE = new Set(['krillion']);
 const PARSE_ORDER = [...GAMES.filter((g) => !LOOSE.has(g.id)), ...GAMES.filter((g) => LOOSE.has(g.id))];
 
 export const GAME_MAP: Record<string, GameDef> = Object.fromEntries(GAMES.map((g) => [g.id, g]));

@@ -65,6 +65,30 @@ describe('parseShare', () => {
     expect(r).toMatchObject({ gameId: 'framed', score: 3, display: '3/6', points: 75 });
   });
 
+  it('Wordle with comma puzzle number', () => {
+    const r = parseShare(`Wordle 1,978 5/6\n\n⬛⬛🟨🟨⬛\n🟨🟨🟩⬛⬛\n🟨⬛🟩🟨⬛\n⬛🟨🟩⬛⬛\n🟩🟩🟩🟩🟩`);
+    expect(r).toMatchObject({ gameId: 'wordle', score: 5, display: '5/6', puzzle: '1978', points: 40 });
+  });
+
+  it('Krillion real share', () => {
+    const r = parseShare(`Krillion #126 🦐\n360\n\n🫧🏮🐟🏮🦑🦑🐟`);
+    expect(r).toMatchObject({ gameId: 'krillion', score: 360, display: '360 pts', puzzle: '126' });
+    expect(r?.points).toBeCloseTo(51.4, 1);
+    expect(r?.meta?.dive).toBe('🫧🏮🐟🏮🦑🦑🐟');
+  });
+
+  it('Yeastimate', () => {
+    const r = parseShare(`Yeastimate #25 · 1,393\n🟨🔥⬜🟨🟨⬜🔥\nStill Proving\nhttps://yeastimate.com`);
+    expect(r).toMatchObject({ gameId: 'yeastimate', score: 1393, display: '1,393', puzzle: '25' });
+    expect(r?.meta).toMatchObject({ slices: '🟨🔥⬜🟨🟨⬜🔥', rank: 'Still Proving' });
+  });
+
+  it('Plain Game', () => {
+    const r = parseShare(`Plain Game #026 — ✈️ 1,742 m\n🎯⬜⬜🟧⬜⬜⬜  ⭐ Golden: round 7\nTry one: How many strings does a standard violin have?\nCan you beat me? plaingame.app\nhttps://plaingame.app/c/8n5Y5wXkHejX4O3B`);
+    expect(r).toMatchObject({ gameId: 'plane', score: 1742, display: '1,742 m', puzzle: '026', points: 17.4 });
+    expect(r?.meta).toMatchObject({ rounds: '🎯⬜⬜🟧⬜⬜⬜', golden: 7 });
+  });
+
   it('Krillion best guess (points or depth)', () => {
     expect(parseShare(`Krillion #125\n🦐🦐🐟🐋\n430 pts`)).toMatchObject({ gameId: 'krillion', score: 430 });
     expect(parseShare(`One in a Krillion — I dove 4,300m today`)).toMatchObject({ gameId: 'krillion', score: 430 });
