@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { takeNext, useAuth } from '../lib/auth';
 import { GAMES } from '@shared/games';
 import { gameVars } from '../components/ui';
+import { SiteFooter } from './Info';
 
 export default function Login() {
   const { session } = useAuth();
@@ -72,6 +73,7 @@ export default function Login() {
         )}
         {err && <p className="error" role="alert">{err}</p>}
       </div>
+      <SiteFooter />
     </div>
   );
 }

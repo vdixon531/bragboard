@@ -8,6 +8,8 @@ import {
 } from '../lib/api';
 import { PERIODS, addDays, periodRange, prettyDay, today, type Period } from '../lib/dates';
 import { dayBoards, standings } from '../lib/standings';
+import { firstScoreDay, pointsRace } from '../lib/series';
+import { LineRace } from '../components/LineRace';
 import { AWARDS, leagueAwards } from '../lib/awards';
 import type { League, Member, Score } from '../lib/types';
 import { Avatar, AwardBadge, CopyButton, Medal, Podium, Shell, Spinner, gameVars } from '../components/ui';
@@ -76,6 +78,16 @@ export default function LeaguePage() {
   const table = useMemo(() => standings(scores, memberIds, games, from, to), [scores, memberIds, games, from, to]);
   const boards = useMemo(() => dayBoards(scores, games, day), [scores, games, day]);
   const awards = useMemo(() => leagueAwards(scores, memberIds, games, today()), [scores, memberIds, games]);
+  // Week / Month / All time get a line graph that ends today; all time is bucketed by week.
+  const race = useMemo(() => {
+    if (period === 'today') return null;
+    const end = today();
+    const start = period === 'all' ? firstScoreDay(scores, memberIds, games) ?? end : from;
+    return pointsRace(scores, memberIds, games, start, end, period === 'all' ? 'week' : 'day');
+  }, [period, scores, memberIds, games, from]);
+  // The draw-in animation plays the first time each tab is opened on this visit.
+  const drawn = useRef(new Set<Period>());
+  useEffect(() => { drawn.current.add(period); }, [period]);
 
   if (league === undefined) return <Shell><Spinner /></Shell>;
   if (league === null) {
@@ -140,9 +152,13 @@ export default function LeaguePage() {
 
       {someonePlayed ? (
         <>
-          <Podium entries={table.filter((s) => s.played > 0).slice(0, 3).map((s) => ({
-            profile: profiles.get(s.userId), value: `${s.total} pts`, sub: s.wins ? `${s.wins} ${s.wins === 1 ? 'win' : 'wins'}` : undefined,
-          }))} />
+          {race && race.lines.length > 0 ? (
+            <LineRace key={period} race={race} profiles={profiles} me={me} animate={!drawn.current.has(period)} />
+          ) : (
+            <Podium entries={table.filter((s) => s.played > 0).slice(0, 3).map((s) => ({
+              profile: profiles.get(s.userId), value: `${s.total} pts`, sub: s.wins ? `${s.wins} ${s.wins === 1 ? 'win' : 'wins'}` : undefined,
+            }))} />
+          )}
           <div className="table-wrap">
             <table className="standings">
               <thead><tr><th>#</th><th>Player</th><th className="num">Pts</th><th className="num">Wins</th><th className="num">Played</th><th className="num">Avg</th></tr></thead>

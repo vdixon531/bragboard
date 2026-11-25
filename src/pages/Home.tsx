@@ -6,6 +6,7 @@ import { myLeagues, myScoresOn } from '../lib/api';
 import { today } from '../lib/dates';
 import type { League, Score } from '../lib/types';
 import { Avatar, Shell, Spinner, gameVars } from '../components/ui';
+import { markPhoneSetupSeen, phoneSetupSeen } from '../components/PhoneSetup';
 
 export default function Home() {
   const { session, profile } = useAuth();
@@ -14,6 +15,7 @@ export default function Home() {
   const [mine, setMine] = useState<Score[]>([]);
   const [code, setCode] = useState('');
   const [err, setErr] = useState('');
+  const [setupSeen, setSetupSeen] = useState(phoneSetupSeen);
 
   useEffect(() => {
     if (!session) return;
@@ -51,6 +53,19 @@ export default function Home() {
         </span>
         <span aria-hidden className="post-cta-arrow">→</span>
       </Link>
+
+      {!setupSeen && (
+        <div className="card tip setup-nudge">
+          <div>
+            <strong>📲 Post straight from your game’s Share button</strong>
+            <p className="small">One-time setup for your phone. Takes about a minute.</p>
+          </div>
+          <div className="row gap">
+            <Link to="/me#phone" className="btn primary small" onClick={() => { markPhoneSetupSeen(); }}>Set it up</Link>
+            <button className="btn ghost small" onClick={() => { markPhoneSetupSeen(); setSetupSeen(true); }}>Dismiss</button>
+          </div>
+        </div>
+      )}
 
       {err && <p className="error">{err}</p>}
       {!leagues && !err && <Spinner />}

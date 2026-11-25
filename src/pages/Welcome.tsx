@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { takeNext, useAuth } from '../lib/auth';
+import { useAuth } from '../lib/auth';
 import { updateProfile } from '../lib/api';
 import { Avatar } from '../components/ui';
 
-export const AVATARS = ['🦊', '🐙', '🦐', '🐸', '🦉', '🐼', '🦖', '🐝', '🦄', '🐢', '🦩', '🐳', '🍞', '✈️', '🌍', '🎯', '👾', '🌵', '🍕', '🚀'];
+export const AVATARS = ['🦊', '🐙', '🦐', '🐸', '🦉', '🐼', '🦖', '🐝', '🦄', '🐢', '🦩', '🐳', '🍞', '✈️', '🌍', '🎯', '👾', '🌵', '🍕', '🚀', '🐵', '🐶', '🐱', '🦁', '🐯', '🐨', '🐧', '🐷', '🐰', '🦈', '🐥', '🐣', '🐹', '🐭', '🐻', '🦆'];
 export const COLORS = ['#FF6B2C', '#F5B700', '#19A974', '#0F6B5C', '#2F7FE8', '#6C5CE7', '#B784C9', '#E5484D', '#0A2340', '#8C3B12'];
 
 export function ProfileFields({ name, setName, avatar, setAvatar, color, setColor }: {
@@ -54,7 +54,8 @@ export default function Welcome() {
     try {
       await updateProfile(session.user.id, { display_name: name.trim(), avatar, color, onboarded: true });
       await refreshProfile();
-      nav(takeNext() ?? '/', { replace: true });
+      // The remembered destination (e.g. a join link) is picked up by /setup when the user continues.
+      nav('/setup', { replace: true });
     } catch (e2) {
       setErr((e2 as Error).message);
       setBusy(false);
@@ -64,6 +65,7 @@ export default function Welcome() {
   return (
     <div className="center-screen">
       <form className="card narrow stack" onSubmit={save}>
+        <p className="eyebrow">Step 1 of 2</p>
         <h1>Make it yours</h1>
         <p className="muted">This is how you’ll show up on every leaderboard.</p>
         <ProfileFields {...{ name, setName, avatar, setAvatar, color, setColor }} />
