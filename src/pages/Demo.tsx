@@ -1,9 +1,45 @@
-// Dev-only preview of the celebration screen: /demo?game=maptap  (not included in production builds)
+// Dev-only previews (not included in production builds):
+//   /demo?game=maptap            celebration screen
+//   /demo?chart=week|month|all   league line graph with fake players
 import { useSearchParams } from 'react-router-dom';
 import { parseShare } from '@shared/games';
 import { scoreAwardKeys } from '../lib/awards';
 import type { Score } from '../lib/types';
 import { Celebration } from '../components/Celebration';
+import { LineRace } from '../components/LineRace';
+import { pointsRace } from '../lib/series';
+import { addDays, today, weekStart, monthStart } from '../lib/dates';
+import type { Profile } from '../lib/types';
+
+const FAKE: Profile[] = [
+  { id: 'me', display_name: 'Valmik', avatar: '🐵', color: '#FF6B2C', onboarded: true },
+  { id: 'b', display_name: 'Sam', avatar: '🐥', color: '#2F7FE8', onboarded: true },
+  { id: 'c', display_name: 'Priya', avatar: '🦊', color: '#19A974', onboarded: true },
+  { id: 'd', display_name: 'Jordan', avatar: '🐼', color: '#6C5CE7', onboarded: true },
+  { id: 'e', display_name: 'Alex', avatar: '🦈', color: '#0A2340', onboarded: true },
+];
+
+function ChartDemo({ period }: { period: string }) {
+  const end = today();
+  const start = period === 'week' ? weekStart(end) : period === 'month' ? monthStart(end) : addDays(end, -180);
+  const scores: Score[] = [];
+  let id = 0;
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let d = start; d <= end; d = addDays(d, 1)) {
+    FAKE.forEach((p, k) => {
+      if (rnd() < 0.2 + k * 0.08) return;
+      const points = Math.round(30 + rnd() * 60 + (k === 1 ? 10 : 0));
+      scores.push({ id: ++id, user_id: p.id, game_id: 'wordle', day: d, score: points, points, display: '', failed: false, puzzle: null, meta: {}, source: 'app', created_at: d });
+    });
+  }
+  const race = pointsRace(scores, FAKE.map((p) => p.id), ['wordle'], start, end, period === 'all' ? 'week' : 'day');
+  return (
+    <div className="page wide" style={{ paddingTop: 24 }}>
+      <LineRace race={race} profiles={new Map(FAKE.map((p) => [p.id, p]))} me="me" animate />
+    </div>
+  );
+}
 
 const SAMPLES: Record<string, string> = {
   maptap: 'www.maptap.gg November 18\n93🏆 87🎉 71😁 99🏆 64🙂\nFinal score: 912',
@@ -17,6 +53,7 @@ const SAMPLES: Record<string, string> = {
 
 export default function Demo() {
   const [p] = useSearchParams();
+  if (p.get('chart')) return <ChartDemo period={p.get('chart')!} />;
   const game = p.get('game') ?? 'maptap';
   const r = parseShare(SAMPLES[game] ?? SAMPLES.maptap)!;
   const score: Score & { awardKeys: string[] } = {
