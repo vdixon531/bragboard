@@ -4,7 +4,7 @@ import { takeNext, useAuth } from '../lib/auth';
 import { updateProfile } from '../lib/api';
 import { Avatar } from '../components/ui';
 
-export const AVATARS = ['🦊', '🐙', '🦐', '🐸', '🦉', '🐼', '🦖', '🐝', '🦄', '🐢', '🦩', '🐳', '🍞', '✈️', '🌍', '🎯', '👾', '🌵', '🍕', '🚀'];
+export const AVATARS = ['🦊', '🐙', '🦐', '🐸', '🦉', '🐼', '🦖', '🐝', '🦄', '🐢', '🦩', '🐳', '🍞', '✈️', '🌍', '🎯', '👾', '🌵', '🍕', '🚀', '🐵', '🐶', '🐱', '🦁', '🐯', '🐨', '🐧', '🐷', '🐰', '🦈'];
 export const COLORS = ['#FF6B2C', '#F5B700', '#19A974', '#0F6B5C', '#2F7FE8', '#6C5CE7', '#B784C9', '#E5484D', '#0A2340', '#8C3B12'];
 
 export function ProfileFields({ name, setName, avatar, setAvatar, color, setColor }: {
