@@ -5,6 +5,7 @@ import { updateProfile } from '../lib/api';
 import { Shell } from '../components/ui';
 import { PhoneSetup } from '../components/PhoneSetup';
 import { ProfileFields } from './Welcome';
+import { SiteFooter } from './Info';
 
 export default function Me() {
   const { session, profile, refreshProfile, signOut } = useAuth();
@@ -46,6 +47,8 @@ export default function Me() {
         <p className="muted small">Signed in as {session?.user.email}</p>
         <button className="btn ghost danger" onClick={signOut}>Sign out</button>
       </section>
+
+      <SiteFooter />
     </Shell>
   );
 }

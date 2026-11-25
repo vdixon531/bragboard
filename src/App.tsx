@@ -12,6 +12,7 @@ import Join from './pages/Join';
 import LeaguePage from './pages/LeaguePage';
 import Me from './pages/Me';
 import Setup from './pages/Setup';
+import { Faq, Privacy } from './pages/Info';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
@@ -49,6 +50,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/faq" element={<Faq />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="/welcome" element={<RequireAuth><Welcome /></RequireAuth>} />
       <Route path="/setup" element={<RequireAuth><Setup /></RequireAuth>} />
       <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
