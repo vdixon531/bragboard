@@ -426,3 +426,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
+
+/* Home nudge toward phone setup */
+.setup-nudge { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.setup-nudge p { margin: 4px 0 0; }

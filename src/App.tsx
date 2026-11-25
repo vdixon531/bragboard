@@ -11,6 +11,7 @@ import NewLeague from './pages/NewLeague';
 import Join from './pages/Join';
 import LeaguePage from './pages/LeaguePage';
 import Me from './pages/Me';
+import Setup from './pages/Setup';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
@@ -49,6 +50,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/welcome" element={<RequireAuth><Welcome /></RequireAuth>} />
+      <Route path="/setup" element={<RequireAuth><Setup /></RequireAuth>} />
       <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
       <Route path="/post" element={<RequireAuth><Post /></RequireAuth>} />
       <Route path="/share" element={<RequireAuth><Post /></RequireAuth>} />
