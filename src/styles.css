@@ -478,8 +478,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 /* rank race (Week / Month bump chart) */
 .race-grid text.first { fill: var(--ink); }
 .race-grid text.now { fill: var(--ink); }
-.race-grid text.future { opacity: .45; }
-.rank-future { fill: var(--line); opacity: .35; stroke: none; }
 .rank-dot { fill: var(--c); stroke: var(--surface); stroke-width: 1.5; }
 @media (prefers-color-scheme: dark) { .rank-dot { fill: color-mix(in oklab, var(--c) 70%, #fff); } }
 .rt-row.rank { grid-template-columns: 30px 22px 1fr auto; }

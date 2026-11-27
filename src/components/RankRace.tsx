@@ -16,7 +16,7 @@ const ease = (t: number) => t * t * (3 - 2 * t);
 
 /**
  * Bump chart: each player's place in the running standings at the end of every day, 1st at the top.
- * The axis covers the whole week or month; days after today are left empty. Lines cross where someone overtakes.
+ * The axis runs from the first day shown to today. Lines cross where someone overtakes.
  * `animate` draws the lines in left-to-right on mount only, with avatars riding the tips.
  */
 export function RankRace({ race, profiles, animate, me }: {
@@ -52,7 +52,7 @@ export function RankRace({ race, profiles, animate, me }: {
   }, []);
 
   const n = race.xs.length;
-  const last = race.through;
+  const last = n - 1;
   const places = Math.max(1, race.places);
   const plotW = Math.max(10, w - M.left - M.right);
   const plotH = Math.max(0, (places - 1) * ROW);
@@ -135,10 +135,6 @@ export function RankRace({ race, profiles, animate, me }: {
           </defs>
 
           <g className="race-grid">
-            {last < n - 1 && (
-              <rect className="rank-future" x={x(last) + (x(1) - x(0)) / 2} y={M.top - ROW / 2}
-                width={x(n - 1) - x(last) - (x(1) - x(0)) / 2 + 12} height={plotH + ROW} rx={8} />
-            )}
             {Array.from({ length: places }, (_, k) => k + 1).map((r) => (
               <g key={r}>
                 <line x1={M.left} x2={M.left + plotW} y1={y(r)} y2={y(r)} />
@@ -146,7 +142,7 @@ export function RankRace({ race, profiles, animate, me }: {
               </g>
             ))}
             {ticksX.map((i) => (
-              <text key={i} x={x(i)} y={H - 8} textAnchor="middle" className={i > last ? 'future' : i === last ? 'now' : ''}>
+              <text key={i} x={x(i)} y={H - 8} textAnchor="middle" className={i === last ? 'now' : ''}>
                 {short ? fromDay(race.xs[i]).getDate() : fromDay(race.xs[i]).toLocaleDateString(undefined, { weekday: 'short' })}
               </text>
             ))}
