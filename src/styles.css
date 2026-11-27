@@ -475,6 +475,17 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .rt-swatch { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; }
 .rt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
 .rt-val { font: 700 .85rem var(--f-mono); font-variant-numeric: tabular-nums; }
+/* rank race (Week / Month bump chart) */
+.race-grid text.first { fill: var(--ink); }
+.race-grid text.now { fill: var(--ink); }
+.race-grid text.future { opacity: .45; }
+.rank-future { fill: var(--line); opacity: .35; stroke: none; }
+.rank-dot { fill: var(--c); stroke: var(--surface); stroke-width: 1.5; }
+@media (prefers-color-scheme: dark) { .rank-dot { fill: color-mix(in oklab, var(--c) 70%, #fff); } }
+.rt-row.rank { grid-template-columns: 30px 22px 1fr auto; }
+.rt-place { font: 700 .75rem var(--f-mono); color: var(--muted); }
+.rt-up { color: #19A974; font-size: .7rem; }
+.rt-down { color: #E0533D; font-size: .7rem; }
 .race-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 8px 8px 0; font-size: .85rem; color: var(--muted); }
 .rl-item { display: inline-flex; align-items: center; gap: 6px; }
 .rl-key { width: 14px; height: 3px; border-radius: 2px; background: var(--c); }
