@@ -1,13 +1,13 @@
 // Dev-only previews (not included in production builds):
 //   /demo?game=maptap            celebration screen
-//   /demo?chart=week|month|all   league graph with fake players (&still skips the draw-in)
+//   /demo?chart=week|month|all   league graph with fake players (&still skips the draw-in, &since=N fakes a league started N days ago)
 import { useSearchParams } from 'react-router-dom';
 import { parseShare } from '@shared/games';
 import { scoreAwardKeys } from '../lib/awards';
 import type { Score } from '../lib/types';
 import { Celebration } from '../components/Celebration';
 import { LineRace } from '../components/LineRace';
-import { monthEnd, pointsRace, rankRace } from '../lib/series';
+import { pointsRace, rankRace } from '../lib/series';
 import { RankRace } from '../components/RankRace';
 import { addDays, today, weekStart, monthStart } from '../lib/dates';
 import type { Profile } from '../lib/types';
@@ -20,9 +20,11 @@ const FAKE: Profile[] = [
   { id: 'e', display_name: 'Alex', avatar: '🦈', color: '#0A2340', onboarded: true },
 ];
 
-function ChartDemo({ period, still }: { period: string; still: boolean }) {
+function ChartDemo({ period, still, since }: { period: string; still: boolean; since: number | null }) {
   const end = today();
-  const start = period === 'week' ? weekStart(end) : period === 'month' ? monthStart(end) : addDays(end, -180);
+  const periodStart = period === 'week' ? weekStart(end) : period === 'month' ? monthStart(end) : addDays(end, -180);
+  const leagueStart = since === null ? periodStart : addDays(end, -since);
+  const start = leagueStart > periodStart ? leagueStart : periodStart;
   const scores: Score[] = [];
   let id = 0;
   let seed = 7;
@@ -40,7 +42,7 @@ function ChartDemo({ period, still }: { period: string; still: boolean }) {
     <div className="page wide" style={{ paddingTop: 24 }}>
       {period === 'all'
         ? <LineRace race={pointsRace(scores, ids, ['wordle'], start, end, 'week')} profiles={profiles} me="me" animate={!still} />
-        : <RankRace race={rankRace(scores, ids, ['wordle'], start, period === 'week' ? addDays(start, 6) : monthEnd(start), end)} profiles={profiles} me="me" animate={!still} />}
+        : <RankRace race={rankRace(scores, ids, ['wordle'], start, end)} profiles={profiles} me="me" animate={!still} />}
     </div>
   );
 }
@@ -57,7 +59,7 @@ const SAMPLES: Record<string, string> = {
 
 export default function Demo() {
   const [p] = useSearchParams();
-  if (p.get('chart')) return <ChartDemo period={p.get('chart')!} still={p.has('still')} />;
+  if (p.get('chart')) return <ChartDemo period={p.get('chart')!} still={p.has('still')} since={p.get('since') ? Number(p.get('since')) : null} />;
   const game = p.get('game') ?? 'maptap';
   const r = parseShare(SAMPLES[game] ?? SAMPLES.maptap)!;
   const score: Score & { awardKeys: string[] } = {

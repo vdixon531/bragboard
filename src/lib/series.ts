@@ -51,30 +51,27 @@ export function firstScoreDay(scores: Score[], memberIds: string[], games: strin
 
 export interface RankLine {
   userId: string;
-  /** 1-based position in the running standings at the end of each day; null before their first score or after `through`. */
+  /** 1-based position in the running standings at the end of each day; null before their first score. */
   ranks: (number | null)[];
   /** Running points total at the end of each day (null where `ranks` is null). */
   totals: (number | null)[];
 }
-export interface RankRace { xs: string[]; through: number; places: number; lines: RankLine[] }
+export interface RankRace { xs: string[]; places: number; lines: RankLine[] }
 
 /**
  * Position in the period's standings at the end of each day, for the bump chart.
- * x points run every day from `from` to `to`; days after `through` (today) are left empty so the axis can show the
- * whole week or month. Positions use the standings table's order (points, then wins, then average), so the line
+ * x points run every day from `from` to `to` (pass today as `to`, so the axis ends now). Positions use the standings table's order (points, then wins, then average), so the line
  * on the last day matches the table below. Players join the chart on the day they first score.
  */
-export function rankRace(scores: Score[], memberIds: string[], games: string[], from: string, to: string, through: string): RankRace {
+export function rankRace(scores: Score[], memberIds: string[], games: string[], from: string, to: string): RankRace {
   const xs: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) xs.push(d);
-  let last = -1;
-  xs.forEach((d, i) => { if (d <= through) last = i; });
 
   const lines = new Map<string, RankLine>(memberIds.map((id) => [id, {
     userId: id, ranks: new Array(xs.length).fill(null), totals: new Array(xs.length).fill(null),
   }]));
   let places = 0;
-  for (let i = 0; i <= last; i++) {
+  for (let i = 0; i < xs.length; i++) {
     const table = standings(scores, memberIds, games, from, xs[i]).filter((s) => s.played > 0);
     places = Math.max(places, table.length);
     table.forEach((s, k) => {
@@ -83,12 +80,5 @@ export function rankRace(scores: Score[], memberIds: string[], games: string[], 
       l.totals[i] = s.total;
     });
   }
-  return { xs, through: last, places, lines: [...lines.values()].filter((l) => l.ranks.some((r) => r !== null)) };
+  return { xs, places, lines: [...lines.values()].filter((l) => l.ranks.some((r) => r !== null)) };
 }
-
-/** Last day of the month containing `s`. */
-export const monthEnd = (s: string) => {
-  let d = s.slice(0, 8) + '28';
-  while (addDays(d, 1).slice(0, 7) === s.slice(0, 7)) d = addDays(d, 1);
-  return d;
-};

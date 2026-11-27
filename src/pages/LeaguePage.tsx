@@ -8,7 +8,7 @@ import {
 } from '../lib/api';
 import { PERIODS, addDays, periodRange, prettyDay, today, type Period } from '../lib/dates';
 import { dayBoards, standings } from '../lib/standings';
-import { firstScoreDay, monthEnd, pointsRace, rankRace } from '../lib/series';
+import { firstScoreDay, pointsRace, rankRace } from '../lib/series';
 import { LineRace } from '../components/LineRace';
 import { RankRace } from '../components/RankRace';
 import { AWARDS, leagueAwards } from '../lib/awards';
@@ -85,11 +85,13 @@ export default function LeaguePage() {
     const end = today();
     return pointsRace(scores, memberIds, games, firstScoreDay(scores, memberIds, games) ?? end, end, 'week');
   }, [period, scores, memberIds, games]);
-  // Week / Month: place in the standings at the end of each day, across the whole week or month.
+  // Week / Month: place in the standings at the end of each day, up to today. A league that started partway
+  // through the period starts its axis on its first score instead of the 1st / Monday.
   const ranks = useMemo(() => {
     if (period !== 'week' && period !== 'month') return null;
-    return rankRace(scores, memberIds, games, from, period === 'month' ? monthEnd(from) : to, today());
-  }, [period, scores, memberIds, games, from, to]);
+    const first = firstScoreDay(scores, memberIds, games);
+    return rankRace(scores, memberIds, games, first && first > from ? first : from, today());
+  }, [period, scores, memberIds, games, from]);
   // The draw-in animation plays the first time each tab is opened on this visit.
   const drawn = useRef(new Set<Period>());
   useEffect(() => { drawn.current.add(period); }, [period]);
